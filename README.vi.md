@@ -44,7 +44,7 @@ Vì Apache và Tomcat đọc cùng một thư mục, mỗi bên từ chối th�
 ## Yêu cầu
 
 - Linux nền Debian/Ubuntu, có giao diện đồ họa (bảng điều khiển dùng Tk).
-- `apache2`, `libapache2-mod-php`, `php-mysql`, `mariadb-server`, Java, `python3-tk`, `curl`, `xdg-utils`.
+- `apache2`, `libapache2-mod-php`, `php-mysql`, `mariadb-server`, Java, `python3-tk`, `curl`, `xdg-utils` (thêm `zenity` cho hộp chọn thư mục đẹp hơn, không bắt buộc).
   Gói `.deb` tự cài các thứ này. Nếu chạy từ mã nguồn thì bạn tự cài:
 
 ```bash
@@ -65,7 +65,7 @@ Build từ repo này (cần `dpkg-deb`, `curl`; tải Tomcat và phpMyAdmin mộ
 ```bash
 git clone https://github.com/tranvanhuy-hichan/lampcat-for-linux.git lampcat
 cd lampcat
-packaging/build-deb.sh                  # hoặc: VERSION=1.2.0 packaging/build-deb.sh
+packaging/build-deb.sh                  # hoặc: VERSION=1.3.0 packaging/build-deb.sh
 sudo apt install ./dist/lampcat_*_all.deb
 ```
 
@@ -104,6 +104,20 @@ File mới hoặc vừa sửa được nhận ngay, không cần khởi động 
 - **Config** và **Logs** mở file cấu hình hoặc log của dịch vụ bằng trình soạn thảo mặc định.
 - **Save port** ghi lại cổng vào đúng file cấu hình (giữ file `.bak`) và hỏi có khởi động lại dịch vụ không.
 - Thư mục không có file index sẽ hiện danh sách file trên cả hai server.
+
+## Nhiều dự án cùng lúc
+
+Ngoài thư mục gốc dùng chung, tab **Dự án** (góc trên bên phải panel) cho chạy nhiều thư mục song song.
+Bấm **+ Thêm dự án**, chọn thư mục và đặt tên:
+
+| Chạy trên | Địa chỉ |
+|---|---|
+| Apache (PHP) | `http://<tên>.localhost:8000/` |
+| Tomcat (JSP/servlet) | `http://localhost:8080/<tên>/` |
+
+Mỗi dự án có thư mục gốc riêng nên link tuyệt đối như `/css/app.css` vẫn chạy đúng. `*.localhost` tự trỏ về máy bạn,
+không cần sửa `/etc/hosts`. Thêm hoặc xoá dự án thì Apache tự nạp lại, Tomcat tự nhận; thư mục của bạn không bị sửa hay xoá.
+Danh sách lưu trong `projects.conf`. Mọi dự án dùng chung một cấu hình PHP và một MariaDB, nên hãy đặt tên database riêng cho từng dự án.
 
 ## Cổng, thư mục gốc, cấu hình
 

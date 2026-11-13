@@ -17,6 +17,7 @@ from the same folder. It is the kind of thing XAMPP gives you on Windows, built 
 - [Requirements](#requirements)
 - [Install](#install)
 - [Using it](#using-it)
+- [Several projects at once](#several-projects-at-once)
 - [Ports, web root and config files](#ports-web-root-and-config-files)
 - [Command line](#command-line)
 - [Importing a database](#importing-a-database)
@@ -57,7 +58,7 @@ Because Apache and Tomcat read the same folder, each one refuses what belongs to
 ## Requirements
 
 - A Debian/Ubuntu-based Linux with a desktop session (the panel uses Tk).
-- `apache2`, `libapache2-mod-php`, `php-mysql`, `mariadb-server`, a Java runtime, `python3-tk`, `curl`, `xdg-utils`.
+- `apache2`, `libapache2-mod-php`, `php-mysql`, `mariadb-server`, a Java runtime, `python3-tk`, `curl`, `xdg-utils` (and `zenity` for a nicer folder picker, optional).
   The `.deb` package installs all of these for you. If you run from source you install them yourself:
 
 ```bash
@@ -78,7 +79,7 @@ Build it from this repository (needs `dpkg-deb`, `curl`; it downloads Tomcat and
 ```bash
 git clone https://github.com/tranvanhuy-hichan/lampcat-for-linux.git lampcat
 cd lampcat
-packaging/build-deb.sh                  # or: VERSION=1.2.0 packaging/build-deb.sh
+packaging/build-deb.sh                  # or: VERSION=1.3.0 packaging/build-deb.sh
 sudo apt install ./dist/lampcat_*_all.deb
 ```
 
@@ -119,6 +120,21 @@ the web root or a port.
 - **Config** and **Logs** open the service's config file / log in your default editor.
 - **Save port** rewrites the port in the right config file (a `.bak` is kept) and offers to restart the service.
 - Folders without an index file show a directory listing on both servers.
+
+## Several projects at once
+
+Besides the single shared web root, the **Projects** tab (top right of the panel) serves any number of folders
+side by side. Press **+ Add project**, pick a folder and give it a name:
+
+| Runs on | Address |
+|---|---|
+| Apache (PHP) | `http://<name>.localhost:8000/` |
+| Tomcat (JSP/servlets) | `http://localhost:8080/<name>/` |
+
+Each project gets its own document root, so absolute links such as `/css/app.css` work. `*.localhost` resolves to
+your machine by itself, so nothing needs to be added to `/etc/hosts`. Adding or removing a project reloads Apache and
+Tomcat picks it up on its own; your folders are never modified or deleted. The list is kept in `projects.conf`.
+All projects share one PHP configuration and one MariaDB, so give each project its own database name.
 
 ## Ports, web root and config files
 

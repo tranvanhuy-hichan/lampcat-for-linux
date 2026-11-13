@@ -26,6 +26,10 @@
 !/www/index.jsp
 !/www/hello/
 
+# your project list and the config generated from it
+/projects.conf
+/apache/conf/extra/projects.conf
+
 # build output and local state
 /dist/
 /.installed

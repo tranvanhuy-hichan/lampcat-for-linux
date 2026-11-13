@@ -2,7 +2,7 @@
 # Build dist/lampcat_<version>_all.deb from this folder.  Usage: packaging/build-deb.sh
 set -eu
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VER="${VERSION:-1.2.0}"
+VER="${VERSION:-1.3.0}"
 PMA_VERSION="${PMA_VERSION:-5.2.3}"
 TOMCAT_VERSION="${TOMCAT_VERSION:-10.1.61}"
 CACHE="$SRC/dist/cache"; mkdir -p "$CACHE"
@@ -42,6 +42,7 @@ Section: web
 Priority: optional
 Architecture: all
 Depends: python3, python3-tk, xdg-utils, curl, apache2, libapache2-mod-php, php-mysql, php-mbstring, php-xml, php-curl, php-gd, php-zip, mariadb-server, default-jre
+Recommends: zenity
 Installed-Size: $(du -sk "$B/opt" "$B/usr" | awk '{s+=$1} END {print s}')
 Conflicts: xampp-linux
 Replaces: xampp-linux
