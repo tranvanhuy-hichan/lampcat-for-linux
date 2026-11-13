@@ -16,6 +16,80 @@ import tkinter.font as tkfont
 import webbrowser
 from tkinter import filedialog, messagebox, ttk
 
+# Window/taskbar icon (packaging/lampcat.svg rendered at 128px). Embedded so it also works when the
+# panel is started from a checkout, without the installed .desktop file.
+ICON_PNG = (
+    "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAPHklEQVR4nO2dCZgUxRWAX1XPzi4K"
+    "CAp4oJwLi9cCipyfERU8EROMaCIgGsV4JWg+DxbyiZ9cyWckeASET5FDRWKSzwMvVPAAFEUuicCy"
+    "CxsQRO7l2mO6Ku/VsFzLblfvzFb39PT/ffNNz0z17vTU66pX7716LwJJpHRY23aMy55civZSsraM"
+    "QQsJ0BA/qouPDAhxQzk+9jGAnVJCEf6Wa4Rky4XF52eNWrMGkgSDBCnLa9OBgRyEh/3x0RRCTLAJ"
+    "JMyWgk+P/mXtckiAGgkA3tXMHp7dByUzD192hRAvWcQkG2ONzZ/DVNe4w7UAlA1v25lJ8QIedoIQ"
+    "P7FYMnF/dHTht25O0hYA+dDZdeysrL9KBvfhSw4hfkSAlM9HMu3H2MgNJTonaAlAyYicHEuI2SgG"
+    "uRCSCiyzueifNaow36mhowCUDWvThTE5Bw9Pg5BUYhcw0TdjdOGX1TWqdiiP5bW+Fjt/HoSdn4o0"
+    "BMk/LH+89TXVNapyBCgbnt2VSfgYD0+GkFTmII4EV1U1EpxQAOJzvv0VHjaAkCCwE3WCrifSCSpN"
+    "AXJkiyxL2q9D2PlB4lRLWG/SSu74DyoJgF0WeRrNCR0hJGDI3FidzLHHv3vMFFA2vFUnJjkN/RaE"
+    "BBF0J/Bu0dFrF1e8cXgEIPMudv5ECDs/yHC04k6QR934hwXAHpZ9A4Tm3XSgq513ZGl4ZARgMAxC"
+    "0gIJbETFsRoKyh7P7sg4fAchaYMAu33mmPUrIvQCO38gpBGs3eXAe9wJ7Oy4a0NuWgFiwcsgV8+D"
+    "dIHLCPX5IxVTQH9IE3jvh8EaOBlYq64A0ZPUg47pPfosXZBMqj5nFMbFmfgB0gC686mjq8OeMSRt"
+    "RgJbyDacYvggTaBhPxltggK34ApOAZyQJlTM+Ym2CQpcstwILglyIF2gOT8ZbQKClDKHS5AtISQt"
+    "YYy1ijBg9SEkLUGTcH1aBtaFdKDOKbXTNrWpx8rzsl3HkvueaB1gzS/G9X03YM06AmvcGuDkU139"
+    "Cdi/A+TPBSD/txRk4SKQRWgoLT8IQSM4ApBVD/gF1wBr31d1PlhJ3olml6MQfAty2dsgvv8AoHQf"
+    "BIGUFwDqbN51ALBzewFkZIERyktA/vAxiEUzcIRIbRdKygoAa94J+C+GKOuel8iiJSA+n4zWw08h"
+    "FUk5AWBntAPe9wklAH5CbvgGxNtPgtyatI27RkgdAUDFjl96N/DLfp/8+T1ZCBvE16+CmDs+ZXSE"
+    "lBAA1uwisG7BH7XBWZAS7P4R7FlDQW5cBn7H35s8GQPe/Xaw7pqZOp1PNGgK1pBZwK/8gwq28DMR"
+    "8Cuo0Vv9nwF2Xm9IClLod4ZUIbKQEOhq41c8COz0HLBnPwwQKwU/4s8pAC1x1sBJiSl6OB+rdXvh"
+    "VyAL8LH5e4iMXKl1amzkhcCaXhA3JLXupqYg6tCaQgqiPQN1l5Ji8Bv+E4B6jcG6Y6q6c2qC/Dkf"
+    "5JJ/gVj+NsDebcd8FhntuFtaERve5tg36jcBnosGpotvAtYkG2qC/Gk12K/cWek7eY2/BACtedZd"
+    "rwI781xwi9y8CsRnL4Jc9UF8CD8BNRaAo2CtuwPv/RCwczqA6++4dS3YU34LcHAP+AX/aCg05w+a"
+    "4r7zSeOeeS/YL/wS5PfvV9n5yUIWLAR70s1gv/YAwJ4trs5lp7cFa8BElMRM8Av+EABUuGiZp2z4"
+    "umBHiy9fgtiEa5VZ1jRy1YcQ+/vVIBa+4kroWItLULn9W+JKZpLwhQDwS++K2/J1ObBLBW+K98cB"
+    "lHnoocP/LeaMBnvqYIB927VPY+dfjcvbweAHPBcA0rB5L/1wbJpHY8/3BblmPvgFmhZiE29CBXSd"
+    "9jn86kdQj/A+HNNbAcisG7fwWXrmCPK8KSVqz0/gO3ZvBnvyrSp+QAs0Z/NbJngeg+ipAPBef9S2"
+    "8KnOf3mwrzToSuB3s6feri0ErGFTZSzyEs8EgNb5vMsArba0trenD0mNiBzUC+xpv1Prfh14jzuU"
+    "h9MrPBMAfuOTekP//p1xA4qf7/zjKdmLSuo9qKzudm5LJuM+I8ArPBEA1uZSvSUfLq/s/+T5c853"
+    "gnSCNx/RWiKyll3iexU9wBMBUD59DdSO3R8+gVSFVipi0XSttvzy+8ALjAuAitJt2dm5IVrZxCfP"
+    "QqojPh6vNYIpx5MbQ1iSMC4A5N/XwX73KVSoDkDKU7of7PfGaDXlXW4D05gVAFz3s3ZXOjaTG5eD"
+    "/O9cCArko6AkFE6o2Ad0iJnEqADw3Ou1QrfF/BcgaIjPJjk3wt+GJysARhOjAsDa3+DYRvnzfWTm"
+    "TRbksNIxFbMON4JJzAlARp14ZI0DFMxR2y5dT8Brkkv/7dhMRUGZ2uACBgWAtejkHM4tBYgV70JQ"
+    "EcveUqFq1RKJat0oycKcAGgYOuSGbwGKt0JgKf5Zy09g0ihkTgCaOeefpl24QUfnGlnzII4AtEXb"
+    "AYreDToUpewEa9QKTGFGACjhgtP+fJz/KXQ76MgfVzorufUaG7MHGBEA1sg5DZHcvUVtuw48FMJW"
+    "rGEabmQmdZOZEaD+6c5tthdCuiC3aVxr/TPABEa2hrFM57pTEjXktGGvxrVmmqnVZWYEyNTIQ1W2"
+    "H9IFWep8rcyQAJjZHKpzMaXpIwBauQMyzSRvS68awDpCFpDkT7qYEQCdH97AkKeWYI5tDCxFde5u"
+    "Q4JoSAA0LiZa+wJAIWbJaJMoWkqxoSnRiABoKT31m0BtQ3UAxPyJVX5OnxmpFVBP41oNCYAZJVDD"
+    "8AGGzJ9i7jMgNy71tGQMa6xxrcVmIqGNCIDctt6xDWtwZtwPbsAaSB1te1UVJFpHy8gjtzv/ZsnA"
+    "jA5AqVH276i+DeMqLUvQYU1znbeGUxaRkr1gAmPLQB3zJ4VGBx2tuAiDZnFzAlDknFOXEjIFHZ1r"
+    "1PmtkoU5AViv4QenjRE6jqNUBVc6OrmFdGIGkoU5AdiwBCBWVn0j1AN4rnPkcKrCKeLXKd1crNRo"
+    "BnJzpuDyg3hhSxybsYv7+SZ/TlLBa2IX3eTYTMVFGoyLMOoLkMvfcWzDmrQBluNtCvjagJ3bWyss"
+    "TuU3NIhRARAr39dK8sAvvx+CBu+psSOaRslVH4JJzHoD0Segs92bLHTs/KsgKLALr8f1/4WO7dR+"
+    "SMNucePuYLFwmlY76/oRwSjiiI4f67phWk3FV6+CaYwLAOXQl+u/dm54ypnAew2FVIdf9SetpS2l"
+    "mvOi/pAnASFi3j+02lEyRVcJJH0Gy+mpnQhLzPNmR7QnAqCkfcM3zg0phWy/salVLKKChk3Buvlp"
+    "rSWtqku4fjF4gWchYeKtJwDsmHPDkxqAdftL6jllqPjOOhVI7XJVbMorPBMAygMgFukphJSj3xo4"
+    "Oe5K9Tv4HVXWc401PyEWTEVHWQF4hadBoeLT51S6dx1oc6l1xzR/1/WlO//O6dq1BOTOjTj3Pw9e"
+    "4m1UMCVQmjVUbyqAQ0IwZJY/dQKa84e8oV9Igob+N4Z6m+0cfBAWTstC8dHT2u1pOog8+K5Kue4X"
+    "WLsrIHL/W3qhXoegVPc6iaNqG1/sC1DxeKs+0j+BSsv85jngXhuL0MjD+/wZrAGTXE1NcuV7aPSZ"
+    "AX7APzWDqGTM4JeBKmq4Ys9PKg+fKhdjEJbbB6xrhykfvxvICKZyHzu5xg3hr6JRVD/g7tdqVjRq"
+    "y+r4SEJ5eKhGYG1ALl30VJKzqiKi2A1UV9iecpuvEl/7s2wcjQQ1TKFOqdjkd1Q27p3k5Rs65Qzg"
+    "7fuiP7+f9vKu0vdCAbWnhWXj9MiqHy8c6XY6OBrKOIK2dVmwKF48ctNK/XoDuJYn792RwpEdEyoB"
+    "q4b9mfcai/R1g3+LR0cyVXWtpGn7lJZlz5Z4vD2ODJLyEFfkIkZFkpEyiXc6O62FckQlKyqJFD77"
+    "zUfD0rE1gopHdxsE/JrH/FsyviqolPzcZ0B8McXXiS/9vT2cagMunBYvxrRLz2LoB8jCZ7/YH8Tn"
+    "k33d+YTZEaBuo3gyZKq/G4m6OhV4BFcH7fBxHvi2JDvpHaSE0jZ0tPS5gpaFeK6gqCAXNQgTxZwA"
+    "UOdfdk/CeXAZGlzU/oF6tb+b2BWkVxQtAZlohfDyElUD2ZQQGLuV1J2fhCTIEtfQYvWn8djC3ZvB"
+    "c7CjZP4XINbMS7zzCcMp481sDydqWHa9KuS+bfjDbwOGIwuFkpMzhqYJIwh0XqFOIrfmg9xfC3dq"
+    "kn+r6jAnALWEpDuQhktcJbCG5+AyrjlON41RGJI8uFGWbxK6HUWokG5yP8f7FHMCQMUSzjoPag3s"
+    "ENpVq3bWksKIIwPpCaxeI2VYcj390O4cHNLl3u0qr58SMqHntk4YFzWIE4UEgLwSLlVy95B2y8ld"
+    "aqIYAnaUpAwb+Dis4VpRYJR/lww+VLCSpouKwpUUj0CdS89oHJJksbM9ctaQEmiuXlIprQIoc8Op"
+    "YIJEloFBx5tl4PYIGjz3SFMCgBcmFr8OIf4A+76YY+dvgJC0REpZyBnINRCSljDG1nAh+TIISUuE"
+    "lMu5sPh8CElLhIR5yumNK4GN+HQ2hKQNqPsVRcesa8EPvZoNIWkF6n6qz5UASMb8EaMcYgwBYiY9"
+    "KwGIjsknRTD4RftCKliQOWa92pVy2GPCJNMrch+S+gg5quLwcOQjKgUslpdNGQo7Q0iQWZgxZl2P"
+    "ihdHRgAyDAl5Hx7aEBJUbCnggaPfOMZpHh1XsATFwJtcJSEmeDY6bt0x1asrRU1E9rFH8cl8tqKQ"
+    "WoatiBwsGX78u5UEgD23rtTm4lY83AkhQWGHzWU/Nn5Tpa1RJ4ybyhpVmC8luw4P06iYX2A5iNP6"
+    "jVmj1p0wD02VgXPRsflf43Lh13h4AEJSFeq7X2WMLVhQVQPHDXBlw9t2ZlLMwcNGEJJK7MI7/4bq"
+    "Op9wDJ2Njl67GHWC7igqSyEkNWCwxOZwiVPnE1qx06QTRDJi3dFUMAFCO4Gfob4ZHymGHlXN+cfj"
+    "eg90WV72RXgS2Qqcqx+FmGQhGXmOX+c7UeNN8LFhra6TjNO6sjuEeMkCsu1njCv4AGpAwlkQSvNa"
+    "5nKwBqEv4Wb8Y80gpNahYA503v1TROzpmU8VOlfEroakFucpGdGqDbdZT85YBwksh4FsfijknMpl"
+    "hxsB3EE7U6jq9g7U5osYY2uFlMsojCtrXEHStg79H0BoklTpDl3AAAAAAElFTkSuQmCC"
+)
+
 ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 LAMPCAT_SH = os.path.join(ROOT, "lampcat.sh")
 
@@ -198,8 +272,15 @@ def open_path(path):
 # -------------------------------------------------------------------- GUI
 class Panel(tk.Tk):
     def __init__(self):
-        super().__init__()
+        # className becomes WM_CLASS: it must match StartupWMClass in lampcat.desktop for the dock to
+        # attach the window to the launcher (and show its icon) instead of "Lampcat-panel.py".
+        super().__init__(className="Lampcat")
         self.title("Lampcat Control Panel")
+        try:
+            self._icon = tk.PhotoImage(data=ICON_PNG)
+            self.iconphoto(True, self._icon)
+        except tk.TclError:
+            pass
         self.rows = {}
 
         st = ttk.Style(self)

@@ -2,7 +2,7 @@
 # Build dist/lampcat_<version>_all.deb from this folder.  Usage: packaging/build-deb.sh
 set -eu
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VER="${VERSION:-1.3.0}"
+VER="${VERSION:-1.3.1}"
 PMA_VERSION="${PMA_VERSION:-5.2.3}"
 TOMCAT_VERSION="${TOMCAT_VERSION:-10.1.61}"
 CACHE="$SRC/dist/cache"; mkdir -p "$CACHE"

@@ -6,5 +6,6 @@ Comment=Apache + PHP, MariaDB, Tomcat and phpMyAdmin in one panel
 Exec=lampcat
 Icon=lampcat
 Terminal=false
+StartupWMClass=Lampcat
 Categories=Development;
 Keywords=lamp;apache;php;tomcat;mysql;mariadb;jsp;

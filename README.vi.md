@@ -65,7 +65,7 @@ Build từ repo này (cần `dpkg-deb`, `curl`; tải Tomcat và phpMyAdmin mộ
 ```bash
 git clone https://github.com/tranvanhuy-hichan/lampcat-for-linux.git lampcat
 cd lampcat
-packaging/build-deb.sh                  # hoặc: VERSION=1.3.0 packaging/build-deb.sh
+packaging/build-deb.sh                  # hoặc: VERSION=1.3.1 packaging/build-deb.sh
 sudo apt install ./dist/lampcat_*_all.deb
 ```
 

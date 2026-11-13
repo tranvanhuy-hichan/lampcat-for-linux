@@ -79,7 +79,7 @@ Build it from this repository (needs `dpkg-deb`, `curl`; it downloads Tomcat and
 ```bash
 git clone https://github.com/tranvanhuy-hichan/lampcat-for-linux.git lampcat
 cd lampcat
-packaging/build-deb.sh                  # or: VERSION=1.3.0 packaging/build-deb.sh
+packaging/build-deb.sh                  # or: VERSION=1.3.1 packaging/build-deb.sh
 sudo apt install ./dist/lampcat_*_all.deb
 ```
 
