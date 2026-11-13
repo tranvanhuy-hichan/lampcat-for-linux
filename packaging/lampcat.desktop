@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Lampcat
+GenericName=Local web stack
+Comment=Apache + PHP, MariaDB, Tomcat and phpMyAdmin in one panel
+Exec=lampcat
+Icon=lampcat
+Terminal=false
+Categories=Development;
+Keywords=lamp;apache;php;tomcat;mysql;mariadb;jsp;

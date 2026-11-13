@@ -1,0 +1,37 @@
+# Everything below is created at run time by setup.sh / lampcat.sh and must not be committed.
+
+# downloaded third-party software
+/tomcat/
+/phpmyadmin/
+
+# MariaDB data, sockets, logs and the private copy of the server binary
+/mysql/data/
+/mysql/base/
+/mysql/logs/
+/mysql/run/
+/mysql/tmp/
+
+# Apache run files and logs; generated php.ini
+/apache/logs/
+/apache/run/
+/apache/modules
+/php/
+
+# sessions, uploads, caches
+/tmp/
+
+# your own code when running straight from this checkout (the sample pages stay tracked)
+/www/*
+!/www/index.php
+!/www/index.jsp
+!/www/hello/
+
+# build output and local state
+/dist/
+/.installed
+/setup.log
+*.bak
+*.bak-*
+.DS_Store
+__pycache__/
+*.pyc

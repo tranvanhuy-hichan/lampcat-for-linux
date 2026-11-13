@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Launcher installed as /usr/bin/lampcat.
+# Program files live in /opt/lampcat (read-only). Your data and config live in a per-user folder:
+#   $LAMPCAT_HOME, else the path in ~/.config/lampcat/home, else ~/Lampcat.
+# Installs made before the rename keep using their old folder (~/XamppLinux) so nothing is lost.
+APP="${LAMPCAT_APP:-/opt/lampcat}"
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}"
+if [ -n "${LAMPCAT_HOME:-}" ]; then DATA="$LAMPCAT_HOME"
+elif [ -f "$CFG/lampcat/home" ]; then DATA="$(head -n1 "$CFG/lampcat/home")"
+elif [ -f "$CFG/xampp-linux/home" ]; then DATA="$(head -n1 "$CFG/xampp-linux/home")"
+elif [ -d "$HOME/XamppLinux" ] && [ ! -d "$HOME/Lampcat" ]; then DATA="$HOME/XamppLinux"
+else DATA="$HOME/Lampcat"; fi
+
+msg() { command -v notify-send >/dev/null && notify-send -i lampcat "Lampcat" "$1"; echo "$1" >&2; }
+
+VER="$(cat "$APP/VERSION" 2>/dev/null)"
+# first run, or the installed package is newer than what this folder was set up with
+NEED_SETUP=0; [ "$(cat "$DATA/.installed" 2>/dev/null)" != "$VER" ] && NEED_SETUP=1
+
+mkdir -p "$DATA/panel"
+# Programs always follow the installed version; existing config/data is never overwritten.
+install -m755 "$APP/lampcat.sh" "$APP/setup.sh" "$DATA/"
+install -m755 "$APP/panel/lampcat-panel.py" "$DATA/panel/"
+rm -f "$DATA/xampp.sh" "$DATA/panel/xampp-panel.py"   # files from versions before the rename
+
+if [ "$NEED_SETUP" = 1 ]; then
+  # very old installs called the shared web root "htdocs" (only renamed if never customised)
+  if [ -d "$DATA/htdocs" ] && [ ! -e "$DATA/www" ] && grep -qx 'WEB_ROOT=htdocs' "$DATA/config.env" 2>/dev/null; then
+    mv "$DATA/htdocs" "$DATA/www" && sed -i 's/^WEB_ROOT=htdocs$/WEB_ROOT=www/' "$DATA/config.env"
+  fi
+fi
+cp -rn "$APP/skel/." "$DATA/" 2>/dev/null  # -n: never overwrite user files
+
+if [ "$NEED_SETUP" = 1 ]; then
+  msg "Setting up / updating (takes a few seconds)..."
+  if PMA_TGZ="$APP/vendor/phpMyAdmin.tar.gz" TOMCAT_TGZ="$APP/vendor/tomcat.tar.gz" \
+       "$DATA/setup.sh" >"$DATA/setup.log" 2>&1; then
+    printf '%s\n' "$VER" > "$DATA/.installed"
+  else
+    msg "Setup failed, see $DATA/setup.log"
+    command -v zenity >/dev/null && zenity --error --no-markup --text="Setup failed.\n$(tail -n 8 "$DATA/setup.log")" 2>/dev/null
+    exit 1
+  fi
+fi
+
+[ -n "${LAMPCAT_NO_GUI:-}" ] && exit 0
+exec python3 "$DATA/panel/lampcat-panel.py"
