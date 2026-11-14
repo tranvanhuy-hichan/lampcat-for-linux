@@ -8,7 +8,7 @@ TOMCAT_VERSION="${TOMCAT_VERSION:-10.1.61}"
 say() { printf '\n== %s\n' "$*"; }
 
 [ -f "$ROOT/config.env" ] || printf '# Shared web root for Apache (PHP) and Tomcat (JSP/Servlet)\nWEB_ROOT=www\n' > "$ROOT/config.env"
-mkdir -p "$ROOT"/{www,apache/{conf/extra,logs,run},php,mysql/{logs,run,tmp},tmp/{sessions,uploads,phpmyadmin},panel}
+mkdir -p "$ROOT"/{www,apache/{conf/extra,logs,run},php,mysql/{logs,run,tmp},tmp/{sessions,uploads,phpmyadmin},panel,lib}
 chmod +x "$ROOT/lampcat.sh"
 
 say "Apache modules"

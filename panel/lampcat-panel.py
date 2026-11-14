@@ -523,6 +523,7 @@ class Panel(tk.Tk):
         cbtn(btns, "Mở PHP", "blue", lambda: self.open_project("php")).pack(side="left")
         cbtn(btns, "Mở JSP", "blue", lambda: self.open_project("jsp")).pack(side="left", padx=6)
         cbtn(btns, "Mở thư mục", "slate", self.open_project_folder).pack(side="left")
+        cbtn(btns, "Build Java", "slate", self.build_project).pack(side="left", padx=6)
         self.refresh_projects()
 
     def _project_urls(self, name):
@@ -565,6 +566,21 @@ class Panel(tk.Tk):
             r = subprocess.run([LAMPCAT_SH, "projects", "sync"], capture_output=True, text=True, timeout=60)
             for line in (r.stdout + r.stderr).strip().splitlines():
                 self.tlog(f"[Dự án] {line}")
+        threading.Thread(target=work, daemon=True).start()
+
+    def build_project(self):
+        """Compile a servlet project (src/ + web-content/) so Tomcat can serve it."""
+        sel = self._selected_project()
+        if not sel:
+            return
+        name = sel[0]
+        def work():
+            self.tlog(f"[Dự án] Đang build '{name}'...")
+            r = subprocess.run([LAMPCAT_SH, "projects", "build", name], capture_output=True, text=True, timeout=300)
+            for line in (r.stdout + r.stderr).strip().splitlines():
+                self.tlog(f"[Dự án] {line}")
+            if r.returncode == 0 and not self.running("Tomcat"):
+                self.tlog("[Dự án] Start Tomcat để chạy servlet.")
         threading.Thread(target=work, daemon=True).start()
 
     def add_project(self):

@@ -136,6 +136,16 @@ your machine by itself, so nothing needs to be added to `/etc/hosts`. Adding or 
 Tomcat picks it up on its own; your folders are never modified or deleted. The list is kept in `projects.conf`.
 All projects share one PHP configuration and one MariaDB, so give each project its own database name.
 
+### Servlet projects (Java)
+
+A project folder that has Java sources (`src/` or `src/main/java`) **and** a web folder (`web-content/`, `WebContent/`,
+`web/` or `src/main/webapp`) is a servlet project. Lampcat compiles it with `javac` into `tomcat/build/<name>` and
+Tomcat serves that build at `http://localhost:8080/<name>/`. It builds when Tomcat starts, or press **Build Java**
+in the Projects tab (`./lampcat.sh projects build [name]`) after you change code. Needs a JDK (`default-jdk-headless`).
+Put jars that every project needs, such as the MySQL JDBC driver, in the `lib/` folder next to `lampcat.sh`; they are
+copied into each project's `WEB-INF/lib`. Servlets must use `jakarta.servlet.*` (Tomcat 10.1). A ready-made `.war`
+can instead be dropped into `tomcat/webapps/`.
+
 ## Ports, web root and config files
 
 | Setting | Where it lives | Changed from the panel |

@@ -35,6 +35,46 @@ gone() { ! alive "$1"; }
 # The generated files below are rebuilt from projects.conf; do not edit them by hand.
 PROJECTS_FILE="$ROOT/projects.conf"
 projects_list() { [ -f "$PROJECTS_FILE" ] && grep -Ev '^[[:space:]]*(#|$)' "$PROJECTS_FILE"; return 0; }
+# -------------------------------------------------- java / servlet projects
+# A folder with Java sources (src/ or src/main/java) and a web folder (web-content, WebContent, web or
+# src/main/webapp) is built by javac into tomcat/build/<name> (a normal exploded webapp) and served from there.
+# Extra jars shared by all projects (e.g. a JDBC driver) can be dropped into <this folder>/lib/.
+java_layout() {  # java_layout <dir>  -> sets JSRC and JWEB, returns 0 if it is a servlet project
+  local d="$1" c
+  JSRC=""; JWEB=""
+  for c in src/main/java src; do [ -d "$d/$c" ] && { JSRC="$d/$c"; break; }; done
+  for c in web-content WebContent web src/main/webapp; do [ -d "$d/$c" ] && { JWEB="$d/$c"; break; }; done
+  [ -n "$JSRC" ] && [ -n "$JWEB" ]
+}
+java_build() {  # java_build <name> <dir>
+  local name="$1" dir="$2" out="$ROOT/tomcat/build/$1" cp jar list
+  java_layout "$dir" || return 0
+  command -v javac >/dev/null || { echo "[$name] javac not found - install a JDK (sudo apt install default-jdk-headless)"; return 1; }
+  rm -rf "$out"; mkdir -p "$out/WEB-INF/classes" "$out/WEB-INF/lib"
+  cp -r "$JWEB"/. "$out/"
+  for jar in "$ROOT"/lib/*.jar; do [ -e "$jar" ] && [ ! -e "$out/WEB-INF/lib/$(basename "$jar")" ] && cp "$jar" "$out/WEB-INF/lib/"; done
+  cp="$ROOT/tomcat/lib/servlet-api.jar:$ROOT/tomcat/lib/jsp-api.jar"
+  for jar in "$out"/WEB-INF/lib/*.jar; do [ -e "$jar" ] && cp="$cp:$jar"; done
+  list="$(mktemp)"; find "$JSRC" -name '*.java' | sed 's/.*/"&"/' > "$list"
+  if [ -s "$list" ]; then
+    javac -encoding UTF-8 -nowarn -proc:none -cp "$cp" -d "$out/WEB-INF/classes" @"$list" 2>&1 | sed "s/^/[$name] /"
+    if [ "${PIPESTATUS[0]}" -ne 0 ]; then rm -f "$list"; echo "[$name] build FAILED"; return 1; fi
+  fi
+  rm -f "$list"
+  # resources next to the sources (properties, xml...) belong on the classpath too
+  (cd "$JSRC" && find . -type f ! -name '*.java' -exec cp --parents {} "$out/WEB-INF/classes/" \;)
+  touch "$ROOT/tomcat/conf/Catalina/localhost/$name.xml" 2>/dev/null   # makes a running Tomcat redeploy it
+  echo "[$name] built"
+}
+projects_build() {  # projects_build [name]
+  local name dir rc=0
+  while IFS=$'\t' read -r name dir; do
+    [ -n "$name" ] && [ -d "$dir" ] || continue
+    [ -z "${1:-}" ] || [ "$1" = "$name" ] || continue
+    java_build "$name" "$dir" || rc=1
+  done < <(projects_list)
+  return $rc
+}
 projects_sync() {
   local conf="$ROOT/apache/conf/extra/projects.conf" cdir="$ROOT/tomcat/conf/Catalina/localhost"
   local name dir esc f keep=" "
@@ -48,6 +88,9 @@ projects_sync() {
         [ -n "$name" ] && [ -d "$dir" ] || { echo "Project '$name': folder not found ($dir), skipped" >&2; continue; }
         printf '<VirtualHost *>\n    ServerName %s.localhost\n    DocumentRoot "%s"\n    <Directory "%s">\n        Options Indexes FollowSymLinks MultiViews\n        AllowOverride All\n        Require all granted\n    </Directory>\n</VirtualHost>\n' "$name" "$dir" "$dir"
         esc="$(printf '%s' "$dir" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/"/\&quot;/g')"
+        if java_layout "$dir"; then   # servlet project: Tomcat serves the built copy, not the source folder
+          esc="$(printf '%s' "$ROOT/tomcat/build/$name" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/"/\&quot;/g')"
+        fi
         printf '<!-- lampcat-project -->\n<Context docBase="%s" reloadable="false" />\n' "$esc" > "$cdir/$name.xml"
         keep="$keep$name "
       done < <(projects_list)
@@ -126,6 +169,7 @@ tomcat_start() {
   check_root || return 1
   tomcat_sync_root
   projects_sync
+  projects_build || echo "Some Java projects failed to build (Tomcat still starts)"
   tomcat_env
   "$CATALINA_HOME/bin/startup.sh" >/dev/null 2>&1
   wait_for 20 alive "$TOMCAT_PID" && echo "Tomcat started" || { echo "Tomcat failed - see tomcat/logs/catalina.out"; return 1; }
@@ -154,7 +198,12 @@ run() {  # run <service> <action>
 }
 case "$svc" in
   apache|mysql|tomcat) run "$svc" "$act"; exit $? ;;
-  projects) [ "$act" = sync ] && { projects_apply; exit $?; }; echo "Usage: $0 projects sync"; exit 2 ;;
+  projects)
+    case "$act" in
+      sync) projects_apply; exit $? ;;
+      build) projects_sync; projects_build "${3:-}"; exit $? ;;
+    esac
+    echo "Usage: $0 projects sync | projects build [name]"; exit 2 ;;
   all)
     rc=0
     if [ "$act" = stop ]; then order="tomcat apache mysql"; else order="mysql apache tomcat"; fi

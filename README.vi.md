@@ -119,6 +119,15 @@ Mỗi dự án có thư mục gốc riêng nên link tuyệt đối như `/css/a
 không cần sửa `/etc/hosts`. Thêm hoặc xoá dự án thì Apache tự nạp lại, Tomcat tự nhận; thư mục của bạn không bị sửa hay xoá.
 Danh sách lưu trong `projects.conf`. Mọi dự án dùng chung một cấu hình PHP và một MariaDB, nên hãy đặt tên database riêng cho từng dự án.
 
+### Dự án servlet (Java)
+
+Thư mục dự án có mã Java (`src/` hoặc `src/main/java`) **và** thư mục web (`web-content/`, `WebContent/`, `web/` hoặc
+`src/main/webapp`) được coi là dự án servlet. Lampcat biên dịch bằng `javac` vào `tomcat/build/<tên>`, Tomcat chạy
+bản build đó tại `http://localhost:8080/<tên>/`. Nó tự build khi Tomcat khởi động, hoặc bấm **Build Java** ở tab Dự án
+(`./lampcat.sh projects build [tên]`) sau khi sửa code. Cần có JDK (`default-jdk-headless`). Jar dùng chung cho mọi
+dự án, ví dụ driver MySQL JDBC, bỏ vào thư mục `lib/` cạnh `lampcat.sh`, sẽ được chép vào `WEB-INF/lib` của từng dự án.
+Servlet phải dùng `jakarta.servlet.*` (Tomcat 10.1). Có sẵn file `.war` thì thả vào `tomcat/webapps/`.
+
 ## Cổng, thư mục gốc, cấu hình
 
 | Thiết lập | Nằm ở đâu | Đổi được trên panel |
